@@ -181,6 +181,7 @@ makefile._target = '"%s"' % os.path.join(output_dir, makefile._target)
 # Force c++14
 if sys.platform == 'win32':
     makefile.extra_cxxflags.append('/std:c++14')
+    makefile.extra_cxxflags.append('/DROS_BUILD_SHARED_LIBS=1')
     # The __cplusplus flag is not properly set on Windows for backwards
     # compatibilty. This flag sets it correctly
     makefile.CXXFLAGS.append('/Zc:__cplusplus')
@@ -189,6 +190,22 @@ else:
 
 # Finalise the Makefile, preparing it to be saved to disk
 makefile.finalise()
+
+# ---- Force C++14 and override any gnu++11 etc. ----
+cxxflags = makefile.CXXFLAGS.as_list()
+
+# Remove any existing standard flags
+cxxflags = [
+    f for f in cxxflags
+    if not f.startswith('-std=') and not f.startswith('/std:')
+]
+
+if sys.platform == 'win32':
+    cxxflags.append('/std:c++14')
+else:
+    cxxflags.append('-std=c++14')
+
+makefile.CXXFLAGS.set(cxxflags)
 
 # Replace Qt variables from libraries
 libs = makefile.LIBS.as_list()
